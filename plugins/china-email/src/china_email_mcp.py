@@ -29,7 +29,7 @@ from typing import Any, Callable
 
 
 SERVER_NAME = "china-email"
-SERVER_VERSION = "0.1.0"
+SERVER_VERSION = "1.0.0"
 DEFAULT_PROTOCOL_VERSION = "2025-06-18"
 DEFAULT_CONFIG_PATH = pathlib.Path.home() / ".china-email" / "accounts.json"
 DEFAULT_ATTACHMENT_DIR = pathlib.Path.home() / "Downloads" / "china-email-attachments"

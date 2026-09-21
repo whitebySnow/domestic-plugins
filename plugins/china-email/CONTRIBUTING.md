@@ -51,8 +51,8 @@ Feature suggestions are welcome! Please:
 
 1. **Fork and Clone**
    ```bash
-   git clone https://github.com/yourusername/china-email-plugin.git
-   cd china-email-plugin
+   # Clone your fork, then run from its repository root:
+   cd plugins/china-email
    ```
 
 2. **Create a Branch**
@@ -74,7 +74,7 @@ Feature suggestions are welcome! Please:
    python tests/test_security_improvements.py
    
    # Run all tests
-   pytest tests/
+   python -m unittest discover -s tests -v
    ```
 
 5. **Commit**
@@ -171,8 +171,7 @@ When adding features:
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-# Install in development mode
-pip install -e .
+# Run from plugins/china-email; runtime uses only the standard library.
 
 # Install development dependencies
 pip install pytest pytest-cov black flake8
@@ -181,8 +180,8 @@ pip install pytest pytest-cov black flake8
 ### Running Tests
 
 ```bash
-# Run all tests
-pytest tests/
+# Run all tests without extra dependencies
+python -m unittest discover -s tests -v
 
 # Run with coverage
 pytest --cov=china_email_mcp tests/

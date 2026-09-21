@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Python
 __pycache__/
 *.py[cod]
@@ -47,7 +46,7 @@ htmlcov/
 .nox/
 
 # 敏感信息 - 重要！
-*.json.backup
+*.backup
 accounts.json
 config.toml
 *.log
@@ -63,27 +62,7 @@ Thumbs.db
 # 附件目录（不提交用户数据）
 attachments/
 *.eml
-=======
-.DS_Store
-__pycache__/
-*.py[cod]
-*.pyo
 
-.env
-.env.*
-!.env.example
-
-# Never commit real mailbox credentials or generated account files.
+# Local account data; keep example environment files trackable.
 .china-email/
-accounts.json
-config/accounts.json
-plugins/*/config/accounts.json
-
-# Local plugin/runtime outputs.
-downloads/
-plugins/*/downloads/
-
-# Unrelated local experiments in this workspace; not part of the plugin repo.
-bilibili-homepage/
-saas-pricing/
->>>>>>> a1e0c22009d87de4f11beac03f1957ed297fe119
+!.env.example

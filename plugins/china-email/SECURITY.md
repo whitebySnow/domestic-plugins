@@ -144,11 +144,7 @@ pip install pip-audit
 pip-audit
 ```
 
-Update dependencies:
-
-```bash
-pip install -U -r requirements.txt
-```
+The server uses only the Python standard library. Keep Python updated; development tools installed separately should also be updated.
 
 ## Security Checklist
 
@@ -167,8 +163,8 @@ During operation:
 
 ## Additional Resources
 
-- [SECURITY_IMPROVEMENTS.md](./SECURITY_IMPROVEMENTS.md) - Detailed security features
-- [SECURITY_CHECKLIST.md](./SECURITY_CHECKLIST.md) - Operational security guide
+- [Installation and usage](./README.md)
+- [Contributing](./CONTRIBUTING.md)
 
 ## Hall of Fame
 

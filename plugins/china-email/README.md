@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # China Email MCP Plugin
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -37,33 +36,16 @@ A Model Context Protocol (MCP) plugin for Chinese email providers, enabling seam
 
 #### Quick Start
 
+Run from the repository root. The server uses only the Python standard library; no pip installation is needed.
+
 ```bash
-# Clone the repository
-git clone https://github.com/yourusername/china-email-plugin.git
-cd china-email-plugin
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Install the plugin
-pip install -e .
-
-# Run setup wizard
-python -m china_email_mcp setup
+cd plugins/china-email
+python src/china_email_mcp.py setup
 ```
 
-#### Codex Configuration
+The setup wizard saves account settings to `~/.china-email/accounts.json`. Enable IMAP/SMTP at your provider and use a client authorization code. Alternatively, copy `config/accounts.example.json` to that location and edit your own copy.
 
-Add to your `~/.codex/config.toml`:
-
-```toml
-[mcp_servers.china_email]
-type = "stdio"
-command = "python"
-args = ["-m", "china_email_mcp"]
-```
-
-Restart Codex and the plugin will be available.
+For an MCP client, configure the command as `python` and its argument as the **absolute path** to `src/china_email_mcp.py`. The plugin's `.mcp.json` uses a path relative to the plugin directory; clients using that file must launch it with the plugin directory as their working directory.
 
 ### Quick Examples
 
@@ -84,7 +66,6 @@ Download all attachments from email UID 123 to ~/Downloads
 ```
 Send an email to example@qq.com with subject "Hello" (draft mode)
 ```
-
 ### Supported Providers
 
 | Provider | IMAP Server | SMTP Server | Authorization |
@@ -115,13 +96,12 @@ This plugin implements enterprise-grade security:
 - ✅ Double confirmation before sending emails
 - ✅ Error message sanitization to prevent info leakage
 
-See [SECURITY_IMPROVEMENTS.md](./SECURITY_IMPROVEMENTS.md) for details.
+See [SECURITY.md](./SECURITY.md) for details.
 
 ### Documentation
 
-- [Installation Guide](./INSTALLATION_GUIDE.md) - Complete setup instructions
-- [Security Improvements](./SECURITY_IMPROVEMENTS.md) - Security hardening details
-- [Security Checklist](./SECURITY_CHECKLIST.md) - Deployment and maintenance guide
+- [Installation / 安装](#installation)
+- [Security / 安全说明](./SECURITY.md)
 - [Changelog](./CHANGELOG.md) - Version history
 
 ### Testing
@@ -130,8 +110,8 @@ See [SECURITY_IMPROVEMENTS.md](./SECURITY_IMPROVEMENTS.md) for details.
 # Run security tests
 python tests/test_security_improvements.py
 
-# Run all tests (if pytest configured)
-pytest tests/
+# Run all 7 tests
+python -m unittest discover -s tests -v
 ```
 
 ### Contributing
@@ -175,33 +155,16 @@ This project is licensed under the MIT License - see the [LICENSE](./LICENSE) fi
 
 #### 快速开始
 
+从仓库根目录执行。服务器只使用 Python 标准库，无需安装第三方运行依赖。
+
 ```bash
-# 克隆仓库
-git clone https://github.com/yourusername/china-email-plugin.git
-cd china-email-plugin
-
-# 安装依赖
-pip install -r requirements.txt
-
-# 安装插件
-pip install -e .
-
-# 运行配置向导
-python -m china_email_mcp setup
+cd plugins/china-email
+python src/china_email_mcp.py setup
 ```
 
-#### Codex 配置
+配置向导将账户信息保存到 `~/.china-email/accounts.json`。请先开启邮箱的 IMAP/SMTP，并使用客户端授权码。也可复制 `config/accounts.example.json` 到该位置，再修改自己的配置。
 
-在 `~/.codex/config.toml` 中添加：
-
-```toml
-[mcp_servers.china_email]
-type = "stdio"
-command = "python"
-args = ["-m", "china_email_mcp"]
-```
-
-重启 Codex 后插件即可使用。
+MCP 客户端启动命令使用 `python`，参数使用 `src/china_email_mcp.py` 的绝对路径。插件自带的 `.mcp.json` 使用相对路径，需以插件目录为工作目录。
 
 ### 使用示例
 
@@ -253,13 +216,12 @@ args = ["-m", "china_email_mcp"]
 - ✅ 发送邮件前双重确认
 - ✅ 错误信息脱敏防止信息泄露
 
-详见 [SECURITY_IMPROVEMENTS.md](./SECURITY_IMPROVEMENTS.md)。
+详见 [SECURITY.md](./SECURITY.md)。
 
 ### 文档
 
-- [安装指南](./INSTALLATION_GUIDE.md) - 完整安装说明
-- [安全改进](./SECURITY_IMPROVEMENTS.md) - 安全加固详情
-- [安全检查清单](./SECURITY_CHECKLIST.md) - 部署和维护指南
+- [Installation / 安装](#installation)
+- [Security / 安全说明](./SECURITY.md)
 - [更新日志](./CHANGELOG.md) - 版本历史
 
 ### 测试
@@ -268,8 +230,8 @@ args = ["-m", "china_email_mcp"]
 # 运行安全测试
 python tests/test_security_improvements.py
 
-# 运行所有测试（如果配置了 pytest）
-pytest tests/
+# 运行全部 7 项测试
+python -m unittest discover -s tests -v
 ```
 
 ### 贡献
@@ -293,47 +255,4 @@ pytest tests/
 
 ## Support
 
-- 🐛 [Report bugs](https://github.com/yourusername/china-email-plugin/issues)
-- 💡 [Request features](https://github.com/yourusername/china-email-plugin/issues)
-- 📖 [Read documentation](./INSTALLATION_GUIDE.md)
-=======
-# 国内 Codex 插件市场
-
-这个仓库是一个本地 Codex 插件市场。入口文件是：
-
-- `.agents/plugins/marketplace.json`
-
-当前已接入插件：
-
-- `china-email`：国内邮箱插件，支持 QQ 邮箱、网易 163/126/yeah、腾讯企业邮箱、阿里企业邮箱、139 邮箱和自定义 IMAP/SMTP 邮箱。
-
-## 在 Codex 中使用
-
-在 Codex App 中打开这个仓库后，插件市场会读取 `.agents/plugins/marketplace.json`，并展示 `国内插件市场` 下的 `国内邮箱` 插件。
-
-安装后，推荐直接让 Codex 打开本地配置向导：
-
-```text
-打开国内邮箱配置向导
-```
-
-向导会在本机浏览器打开，用户选择邮箱服务商，填写邮箱地址和授权码，然后点保存即可，不需要手动改 JSON。
-
-也可以手动配置：
-
-```bash
-mkdir -p ~/.china-email
-cp ./plugins/china-email/config/accounts.example.json ~/.china-email/accounts.json
-```
-
-编辑 `~/.china-email/accounts.json`，填入邮箱地址、账号名和客户端授权码。
-
-不要使用网页登录密码；QQ、网易等邮箱通常需要先在网页端设置里开启 IMAP/SMTP，并生成授权码或客户端专用密码。
-
-## 从 GitHub 安装
-
-把这个仓库发布到 GitHub 后，其他用户在 Codex App 中打开或克隆该仓库即可看到这个本地插件市场。
-如果要进入官方公共插件市场，还需要按官方发布流程提交审核；本仓库已经具备本地 marketplace 结构。
-
-本仓库只提交插件源码和示例配置，不包含任何真实邮箱账号、授权码或本机缓存。真实账号配置会保存在使用者自己的 `~/.china-email/accounts.json`。
->>>>>>> a1e0c22009d87de4f11beac03f1957ed297fe119
+Report bugs and request features through the repository issue tracker. See [installation instructions](#installation) and [contributing guidelines](./CONTRIBUTING.md).

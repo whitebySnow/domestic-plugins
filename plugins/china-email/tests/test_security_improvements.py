@@ -3,16 +3,10 @@
 
 import pathlib
 import sys
-import os
+import unittest
 
-# Force UTF-8 output on Windows
-if sys.platform == 'win32':
-    import io
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
-
-# Add the plugin src directory to path
-plugin_dir = pathlib.Path(r'D:\研究生\图像水印每周报告\domestic-plugins\plugins\china-email\src')
+# Resolve the source directory relative to this test, independent of checkout location.
+plugin_dir = pathlib.Path(__file__).resolve().parents[1] / "src"
 sys.path.insert(0, str(plugin_dir))
 
 def test_security_constants():
@@ -91,22 +85,18 @@ def test_send_safety():
     
     print("[PASS] Send safety defaults maintained")
 
+def load_tests(loader, tests, pattern):
+    return unittest.TestSuite(
+        unittest.FunctionTestCase(test)
+        for test in (
+            test_security_constants,
+            test_validate_safe_path,
+            test_enhanced_format_mailbox,
+            test_enhanced_sanitize_filename,
+            test_send_safety,
+        )
+    )
+
+
 if __name__ == "__main__":
-    print("Running security validation tests...\n")
-    
-    try:
-        test_security_constants()
-        test_validate_safe_path()
-        test_enhanced_format_mailbox()
-        test_enhanced_sanitize_filename()
-        test_send_safety()
-        
-        print("\n" + "="*60)
-        print("ALL SECURITY TESTS PASSED")
-        print("="*60)
-        
-    except Exception as e:
-        print(f"\n[FAIL] Test failed: {e}")
-        import traceback
-        traceback.print_exc()
-        sys.exit(1)
+    unittest.main()
