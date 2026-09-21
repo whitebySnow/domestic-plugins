@@ -1,6 +1,10 @@
 MIT License
 
+<<<<<<< HEAD
+Copyright (c) 2026 China Email Plugin Contributors
+=======
 Copyright (c) 2026 feifeigong
+>>>>>>> a1e0c22009d87de4f11beac03f1957ed297fe119
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,4 +23,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+<<<<<<< HEAD
+=======
 
+>>>>>>> a1e0c22009d87de4f11beac03f1957ed297fe119

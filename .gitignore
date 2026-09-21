@@ -1,22 +1,36 @@
-.DS_Store
+﻿# Python
 __pycache__/
-*.py[cod]
+*.pyc
 *.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
 
-.env
-.env.*
-!.env.example
+# Virtual Environment
+venv/
+env/
+.venv/
 
-# Never commit real mailbox credentials or generated account files.
-.china-email/
-accounts.json
-config/accounts.json
-plugins/*/config/accounts.json
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
 
-# Local plugin/runtime outputs.
-downloads/
-plugins/*/downloads/
+# OS
+.DS_Store
+Thumbs.db
 
-# Unrelated local experiments in this workspace; not part of the plugin repo.
-bilibili-homepage/
-saas-pricing/
+# Temporary files
+*.tmp
+*.bak
+*.log
+cleanup.ps1
+fix-git.ps1
+git-push.ps1
+resolve-push.ps1
+fix-repo-structure.ps1

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Read, search, summarize, and send email through domestic IMAP/SMTP providers.",
   "author": {
-    "name": "whitebySnow"
+    "name": "feifeigong"
   },
   "license": "MIT",
   "keywords": [
@@ -20,7 +20,7 @@
     "displayName": "国内邮箱",
     "shortDescription": "连接 QQ、网易等国内邮箱",
     "longDescription": "Use domestic IMAP/SMTP mailboxes such as QQ Mail, NetEase Mail, Ali Mail, and 139 Mail to search inboxes, read threads, save attachments, and draft or send email from Codex.",
-    "developerName": "whitebySnow",
+    "developerName": "feifeigong",
     "category": "Productivity",
     "capabilities": [
       "Interactive",

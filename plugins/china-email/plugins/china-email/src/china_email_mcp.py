@@ -38,9 +38,6 @@ DEFAULT_SCAN_LIMIT = 100
 MAX_SCAN_LIMIT = 500
 DEFAULT_BODY_CHARS = 12000
 MAX_BODY_CHARS = 80000
-MAX_ATTACHMENT_SIZE = 50 * 1024 * 1024  # 50MB per attachment
-MAX_TOTAL_ATTACHMENT_SIZE = 100 * 1024 * 1024  # 100MB total
-DEBUG_MODE = os.environ.get("CHINA_EMAIL_DEBUG", "").lower() in {"1", "true", "yes"}
 DEFAULT_SETUP_TTL_SECONDS = 900
 NETEASE_PROVIDERS = {"163", "126", "yeah"}
 NETEASE_IMAP_HOSTS = {"imap.163.com", "imap.126.com", "imap.yeah.net"}
@@ -123,18 +120,6 @@ def expand_path(value: str | None) -> pathlib.Path | None:
     if not value:
         return None
     return pathlib.Path(os.path.expandvars(os.path.expanduser(value))).resolve()
-
-
-
-def validate_safe_path(path: pathlib.Path, allowed_base: pathlib.Path) -> pathlib.Path:
-    """Validate that path is within allowed directory and safe."""
-    try:
-        resolved = path.resolve()
-        allowed = allowed_base.resolve()
-        resolved.relative_to(allowed)
-        return resolved
-    except (ValueError, RuntimeError):
-        raise ToolError(f"Path {path} is outside allowed directory {allowed_base}")
 
 
 def load_json_file(path: pathlib.Path) -> Any:
@@ -433,25 +418,12 @@ def select_mailbox(client: imaplib.IMAP4, mailbox: str) -> int:
 
 
 def format_mailbox_arg(mailbox: str) -> str:
-    """Format mailbox name for IMAP with enhanced security validation."""
-    # Check for control characters
-    if any(ord(c) < 32 and c not in '\r\n\t' for c in mailbox):
-        raise ToolError("Mailbox name contains invalid control characters")
-    
-    # Check for null bytes
-    if '\x00' in mailbox:
-        raise ToolError("Mailbox name contains null bytes")
-    
-    # Whitelist pattern: alphanumeric, common separators, Chinese characters
-    if re.fullmatch(r'[\w\u4e00-\u9fa5._&+=/-]+', mailbox, re.UNICODE):
+    if re.fullmatch(r"[A-Za-z0-9._&+=/-]+", mailbox):
         return mailbox
-    
-    # Needs quoting - validate and escape
-    if len(mailbox) > 255:
-        raise ToolError("Mailbox name too long")
-    
-    escaped = mailbox.replace('\\', '\\\\').replace('"', r'\"')
-    return f'"{escaped}'
+    escaped = mailbox.replace("\\", "\\\\").replace('"', r"\"")
+    return f'"{escaped}"'
+
+
 def fetch_headers(client: imaplib.IMAP4, uid: str) -> dict[str, Any] | None:
     status, response = client.uid("FETCH", uid, "(UID FLAGS RFC822.SIZE BODY.PEEK[HEADER])")
     if status != "OK":
@@ -705,26 +677,10 @@ def truncate(value: str, max_chars: int) -> str:
 
 
 def sanitize_filename(value: str) -> str:
-    """Sanitize filename with strict validation."""
-    if not value or value in {'.', '..'}:
-        return "attachment"
-    
-    # Remove path separators
-    cleaned = value.replace('/', '_').replace('\\', '_')
-    
-    
-    # Remove .. sequences (path traversal)
-    cleaned = cleaned.replace('..', '_')
-    # Remove control characters and other dangerous characters
-    cleaned = re.sub(r'[<>:"|?*\x00-\x1F\x7F]', '_', cleaned)
-    
-    # Limit length
-    if len(cleaned) > 255:
-        name, ext = os.path.splitext(cleaned)
-        cleaned = name[:255-len(ext)] + ext
-    
-    cleaned = cleaned.strip('. ')
+    cleaned = re.sub(r'[<>:"/\\|?*\x00-\x1F]', "_", value).strip()
     return cleaned or "attachment"
+
+
 def ensure_list(value: Any) -> list[str]:
     if value is None:
         return []
@@ -1023,19 +979,7 @@ class SetupWizardHandler(http.server.BaseHTTPRequestHandler):
             self.send_html(render_result_page("路径不存在", "请回到配置向导重新提交。", ok=False), 404)
             return
 
-        
-        # CSRF protection: check Referer header
-        referer = self.headers.get("Referer", "")
-        if referer:
-            referer_parsed = urllib.parse.urlparse(referer)
-            if referer_parsed.hostname not in {"127.0.0.1", "localhost", "::1"}:
-                self.send_html(render_result_page("非法请求", "Referer 检查失败", ok=False), 403)
-                return
-
         length = int(self.headers.get("content-length", "0"))
-        if length > 10 * 1024:  # 10KB limit
-            self.send_html(render_result_page("请求过大", "表单数据超过限制", ok=False), 400)
-            return
         payload = self.rfile.read(length).decode("utf-8", errors="replace")
         form = urllib.parse.parse_qs(payload)
         if not self.valid_token(self.first(form, "token")):
@@ -1368,9 +1312,6 @@ def save_attachments(args: dict[str, Any]) -> dict[str, Any]:
 
     output_dir = expand_path(args.get("output_dir")) or expand_path(os.environ.get("CHINA_EMAIL_ATTACHMENT_DIR")) or DEFAULT_ATTACHMENT_DIR
     assert output_dir is not None
-    
-    # Validate output directory is safe
-    output_dir = validate_safe_path(output_dir, pathlib.Path.home())
     output_dir.mkdir(parents=True, exist_ok=True)
 
     client = connect_imap(account)
@@ -1384,61 +1325,20 @@ def save_attachments(args: dict[str, Any]) -> dict[str, Any]:
             pass
 
     message = email.message_from_bytes(raw, policy=default)
-    
-    # Calculate total size first and validate
-    attachment_parts = list(iter_attachment_parts(message))
-    total_size = 0
-    for part in attachment_parts:
-        payload = part.get_payload(decode=True) or b""
-        size = len(payload)
-        if size > MAX_ATTACHMENT_SIZE:
-            raise ToolError(f"Attachment exceeds maximum size: {size} bytes > {MAX_ATTACHMENT_SIZE} bytes")
-        total_size += size
-    
-    if total_size > MAX_TOTAL_ATTACHMENT_SIZE:
-        raise ToolError(f"Total attachments exceed maximum size: {total_size} bytes > {MAX_TOTAL_ATTACHMENT_SIZE} bytes")
-    
-    # Save attachments
     saved = []
-    for index, part in enumerate(attachment_parts, start=1):
+    for index, part in enumerate(iter_attachment_parts(message), start=1):
         payload = part.get_payload(decode=True) or b""
         filename = sanitize_filename(part.get_filename() or f"attachment-{index}")
-        
-        # Prevent directory traversal in filename
-        if os.path.sep in filename or (os.path.altsep and os.path.altsep in filename):
-            filename = filename.replace(os.path.sep, '_')
-            if os.path.altsep:
-                filename = filename.replace(os.path.altsep, '_')
-        
         path = output_dir / filename
-        
-        # Validate final path is still within output_dir
-        try:
-            path = validate_safe_path(path, output_dir)
-        except ToolError:
-            # If validation fails, use a safe fallback name
-            path = output_dir / f"attachment-{index}"
-            path = validate_safe_path(path, output_dir)
-        
-        # Handle duplicates
         if path.exists():
             stem = path.stem
             suffix = path.suffix
-            counter = 1
-            while True:
-                new_path = output_dir / f"{stem}-{counter}{suffix}"
-                if not new_path.exists():
-                    path = new_path
-                    break
-                counter += 1
-                if counter > 1000:
-                    raise ToolError("Too many duplicate filenames")
-        
+            path = output_dir / f"{stem}-{index}{suffix}"
         path.write_bytes(payload)
         saved.append(
             {
                 "index": index,
-                "filename": path.name,
+                "filename": filename,
                 "content_type": part.get_content_type(),
                 "size": len(payload),
                 "path": str(path),
@@ -1446,31 +1346,18 @@ def save_attachments(args: dict[str, Any]) -> dict[str, Any]:
         )
 
     return tool_result({"account": public_account(account), "mailbox": mailbox, "uid": uid, "saved": saved})
+
+
 def compose_email_message(account: dict[str, Any], args: dict[str, Any], *, draft: bool = False) -> tuple[EmailMessage, dict[str, Any], list[str]]:
     to_recipients = ensure_list(args.get("to"))
     cc_recipients = ensure_list(args.get("cc"))
     bcc_recipients = ensure_list(args.get("bcc"))
-    
-    # Validate recipient count
-    total_recipients = len(to_recipients) + len(cc_recipients) + len(bcc_recipients)
-    if total_recipients > 100:
-        raise ToolError("Too many recipients (max 100)")
-    
     if not to_recipients and not cc_recipients and not bcc_recipients:
         raise ToolError("At least one recipient is required.")
 
     subject = str(args.get("subject") or "")
     text_body = str(args.get("text") or "")
     html_body = args.get("html")
-    
-    # Validate sizes
-    if len(subject) > 998:  # RFC 5322 line length limit
-        raise ToolError("Subject line too long")
-    if len(text_body) > 1024 * 1024:  # 1MB
-        raise ToolError("Text body too large")
-    if html_body and len(str(html_body)) > 1024 * 1024:
-        raise ToolError("HTML body too large")
-    
     if not subject:
         raise ToolError("subject is required.")
     if not text_body and not html_body:
@@ -1556,9 +1443,6 @@ def send_email(args: dict[str, Any]) -> dict[str, Any]:
             except Exception:
                 pass
         return tool_result({"sent": False, "draft_saved": True, "draft": draft, "preview": preview})
-
-    if args.get("confirm_send") is not True:
-        raise ToolError("Real sending requires confirm_send=true in addition to dry_run=false.")
 
     client = connect_smtp(account)
     try:
@@ -1696,7 +1580,7 @@ TOOLS: dict[str, dict[str, Any]] = {
         "handler": create_draft,
     },
     "china_email_send_email": {
-        "description": "Create a mailbox draft by default. Real SMTP sending requires both dry_run=false and confirm_send=true.",
+        "description": "Create a mailbox draft by default, or send through SMTP only when dry_run is explicitly false.",
         "inputSchema": {
             "type": "object",
             "required": ["to", "subject"],
@@ -1713,7 +1597,6 @@ TOOLS: dict[str, dict[str, Any]] = {
                 "draft_mailbox": {"type": "string", "description": "Optional IMAP mailbox name to save the draft into when dry_run is true."},
                 "preview_only": {"type": "boolean", "default": False, "description": "When true with dry_run, return only a chat preview instead of writing a mailbox draft."},
                 "dry_run": {"type": "boolean", "default": True, "description": "When true, save a mailbox draft by default. Set false only to actually send."},
-                "confirm_send": {"type": "boolean", "default": False, "description": "Required together with dry_run=false for a real send. Set true only after explicit user approval."},
             },
             "additionalProperties": False,
         },
@@ -1764,17 +1647,8 @@ def handle_request(message: dict[str, Any]) -> dict[str, Any] | None:
     except ToolError as exc:
         return response(request_id, error_result(str(exc)))
     except Exception as exc:
-        # Log full traceback to stderr for debugging
-        if DEBUG_MODE:
-            eprint(traceback.format_exc())
-        else:
-            eprint(f"Error in {method}: {type(exc).__name__}")
-        
-        # Return sanitized error to user
-        error_msg = f"Internal error: {type(exc).__name__}"
-        if DEBUG_MODE:
-            error_msg += f": {exc}"
-        return response(request_id, error_result(error_msg))
+        eprint(traceback.format_exc())
+        return response(request_id, error_result(f"Unexpected {type(exc).__name__}: {exc}"))
 
 
 def response(request_id: Any, result: Any) -> dict[str, Any]:
@@ -1811,4 +1685,3 @@ if __name__ == "__main__":
         run_setup_wizard_cli()
     else:
         run_stdio_server()
-

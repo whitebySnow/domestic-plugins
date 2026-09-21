@@ -26,13 +26,12 @@ The plugin is protocol-based, so prefer IMAP search and message reads before mak
 5. Use `china_email_save_attachments` only when the user asks to download or inspect attachments locally.
 6. For drafts or replies, prefer `china_email_create_draft` so the message appears in the provider's Drafts mailbox for user review.
 7. For sending, call `china_email_send_email` with `dry_run: true` first unless the user explicitly asked to send immediately. With the current tool, `dry_run: true` saves a mailbox draft by default; use `preview_only: true` only when the user wants chat-only preview text.
-8. A real send requires both `dry_run: false` and `confirm_send: true`. Set both only when the user has explicitly approved the exact recipients, subject, body, and attachments.
 
 ## Write Safety
 
 - Never expose configured passwords or authorization codes.
 - Preserve exact recipients, subjects, dates, and quoted facts from source messages.
-- Treat `dry_run: false` plus `confirm_send: true` as a real send operation and use them only with explicit user intent.
+- Treat `dry_run: false` as a real send operation and use it only with explicit user intent.
 - Do not delete, archive, mark read, move, or label messages in this MVP.
 
 ## Output Conventions
